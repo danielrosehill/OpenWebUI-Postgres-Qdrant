@@ -1,5 +1,11 @@
 # Open Web UI, Postgres, Qdrant Docker Compose
 
+[![Docs](https://img.shields.io/badge/Docs-Reference-blue.svg)](https://github.com/open-webui/open-webui)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/openwebui/open-webui)
+[![OpenWebUI](https://img.shields.io/badge/OpenWebUI-Latest-green.svg)](https://openwebui.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Backups](https://img.shields.io/badge/Backups-Automated-yellow.svg)](https://www.postgresql.org/docs/current/backup.html)
+
 ![alt text](opq.jpg)
 
 A short guide to setting up the "OPQ Stack"*
@@ -36,7 +42,7 @@ You can do this as part of the stack *or* you can use a remote PostgreSQL instan
 
 Just remember: data in containers is not persistent until it's made to be persistent. So you'll need to ensure that your PostgreSQL container has a persistent volume in order for your data to survive reboots.
 
-2) To set the `DATABASE_URL` environment variable
+2) Set the `DATABASE_URL` environment variable
 
 ```yaml
 `version: '3.8'
@@ -82,6 +88,29 @@ services:
     restart: unless-stopped
     command: postgres -c shared_buffers=256MB -c work_mem=16MB -c maintenance_work_mem=128MB -c effective_cache_size=
 ```    
+
+## Migrating from SQLite to PostgreSQL
+
+**Important Note**: Simply changing the `DATABASE_URL` environment variable from SQLite to PostgreSQL will not automatically migrate your existing data!
+
+You'll need to perform a migration to transfer your data from SQLite to PostgreSQL.
+
+For migrating your existing OpenWebUI data from SQLite to PostgreSQL, you can use this helpful migration tool:
+
+[open-webui-postgres-migration](https://github.com/taylorwilsdon/open-webui-postgres-migration)
+
+This Python script automates the process of:
+1. Extracting data from your SQLite database
+2. Transforming it to be compatible with PostgreSQL
+3. Loading it into your new PostgreSQL database
+
+The migration process preserves your:
+- User accounts and settings
+- Conversation history
+- Model configurations
+- RAG documents and collections
+
+Follow the instructions in the repository to perform the migration before switching your OpenWebUI instance to use PostgreSQL. It's highly recommended to do all database operations when the data is "cold" (ie, the containers reading and writing to them are down; leave some buffer time for residual read/write operations to wind up).
 
 ## Modification 2: ChromaDB To Qdrant
 
