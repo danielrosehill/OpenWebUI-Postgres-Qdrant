@@ -1,0 +1,87 @@
+version: '3.8'
+services:
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:latest
+    container_name: openwebui
+    hostname: openwebui
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - qdrant
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-some_random_postgres_password}@postgres:5432/openwebui
+      - QDRANT_URI=http://qdrant:${QDRANT_PORT:-6333}
+      - VECTOR_DB=${VECTOR_DB:-qdrant}
+      - QDRANT_API_KEY=${QDRANT_API_KEY:-some_random_qdrant_api_key}
+      - PORT=${OPENWEBUI_PORT:-8080}
+      - REDIS_URL=redis://default:${REDIS_PASSWORD:-some_random_redis_password}@redis:6379 
+      - ENABLE_WEBSOCKET_SUPPORT=true
+      - WEBSOCKET_MANAGER=redis
+      - WEBSOCKET_REDIS_URL=redis://default:${REDIS_PASSWORD:-some_random_redis_password}@redis:6379
+      - DATABASE_POOL_SIZE=20
+      - DATABASE_POOL_MAX_OVERFLOW=10
+      - DATABASE_POOL_TIMEOUT=30
+      - DATABASE_POOL_RECYCLE=1800
+      - DEFAULT_USER_EMAIL=user@example.com
+      - DEFAULT_USER_PASSWORD=some_random_admin_password
+      - DEFAULT_USER_FIRST_NAME=User
+      - DEFAULT_USER_LAST_NAME=Name
+      - DEFAULT_USER_ROLE=admin
+    volumes:
+      - openwebui_data:/app/backend/data
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    hostname: postgres
+    restart: unless-stopped
+    command: postgres -c shared_buffers=256MB -c work_mem=16MB -c maintenance_work_mem=128MB -c effective_cache_size=512MB -c max_connections=100
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=some_random_postgres_password
+      - POSTGRES_DB=postgres
+      - POSTGRES_MULTIPLE_DATABASES=langflow,linkwarden,n8n
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - my_network
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    hostname: qdrant
+    environment:
+      - QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY:-some_random_qdrant_api_key}
+      - QDRANT__SERVICE__ENABLE_API_KEY_AUTHORIZATION=true
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - my_network
+  redis:
+    image: redis:alpine
+    container_name: redis
+    hostname: redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-some_random_redis_password}
+    volumes:
+      - redis_data:/data
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    external: true
+    name: my_network
+volumes:
+  openwebui_data:
+  postgres_data:
+  qdrant_data:
+  redis_data:
