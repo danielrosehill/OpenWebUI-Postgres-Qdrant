@@ -95,9 +95,9 @@ services:
 
 You'll need to perform a migration to transfer your data from SQLite to PostgreSQL.
 
-For migrating your existing OpenWebUI data from SQLite to PostgreSQL, you can use this helpful migration tool:
+For migrating your existing OpenWebUI data from SQLite to PostgreSQL, you can use this helpful migration tool created by Taylor Wildson:
 
-[open-webui-postgres-migration](https://github.com/taylorwilsdon/open-webui-postgres-migration)
+[![SQLite to PostgreSQL Migration](https://img.shields.io/badge/Migration_Tool-SQLite_to_PostgreSQL-orange?logo=github)](https://github.com/taylorwilsdon/open-webui-postgres-migration)
 
 This Python script automates the process of:
 1. Extracting data from your SQLite database
